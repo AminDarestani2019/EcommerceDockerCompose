@@ -1,0 +1,83 @@
+﻿services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+      restart: unless-stopped
+      MSSQL_SA_PASSWORD: "AD_crouse@1403"
+    ports:
+      - "15433:1433"
+    volumes:
+      - "./data/:/var/opt/mssql/data"
+      - "./log/:/var/opt/mssql/log"
+      - "./secrets/:/var/opt/mssql/secrets"
+    networks:
+      - mynetwork
+
+  webapi:
+    container_name: webapi
+    build:
+      context: ./Backend/Store
+      dockerfile: Dockerfile
+    environment:
+      - DefaultConnection=Server=sqlserver;Database=Edu_Store;User Id=amindarestani;Password=AD_crouse@1403;  # تنظیمات اتصال به دیتابیس SQL Server
+      - RedisLocal=redis:6379 
+    ports:
+      - "5085:5085"      
+    depends_on:
+      - sqlserver
+      - basketdb
+    volumes:
+      - ./Backend/Store/src/Web/wwwroot/images:/app/wwwroot/images  # اضافه کردن volume
+    networks:
+      - mynetwork
+
+  basketdb:
+    image: redis:latest
+    container_name: basketdb
+    restart: always
+    networks: 
+      - mynetwork
+    volumes:
+      - redis-data:/data 
+    ports:
+      - "6379:6379"
+    command: ["redis-server","--appendonly","yes"]    
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./Frontend-Client/EduStoreClient
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"  
+    networks:
+      - mynetwork
+    volumes:
+      - ./Frontend-Client/EduStoreClient/dist:/app/dist
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    networks: 
+      - mynetwork
+    container_name: redis-commander
+    restart: always
+    environment: 
+      - REDIS_HOSTS=local:basketdb:6379
+      - HTTP-USER=root
+      - HTTP_PASSWORD=secret
+    ports:
+      - "8081:8081"
+    depends_on:
+      - basketdb
+
+volumes:
+  redis-data:
+  sqlserver-data:
+  sqlserver-log:
+  sqlserver-secrets:
+
+networks:
+  mynetwork:

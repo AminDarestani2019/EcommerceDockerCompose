@@ -13,6 +13,12 @@
       - "./data/:/var/opt/mssql/data"
       - "./log/:/var/opt/mssql/log"
       - "./secrets/:/var/opt/mssql/secrets"
+      - ./setup.sql:/usr/src/setup.sql
+    command: >
+      /bin/bash -c "
+      /opt/mssql/bin/sqlservr & 
+      sleep 30 &&
+      /opt/mssql-tools/bin/sqlcmd -S sqlserver -U sa -P AD_crouse@1403 -i /usr/src/setup.sql
     networks:
       - mynetwork
 

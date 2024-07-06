@@ -9,8 +9,12 @@ ENV SA_PASSWORD=AD_crouse@1403
 COPY setup.sql /usr/src/setup.sql
 COPY entrypoint.sh /usr/src/entrypoint.sh
 
-# Make the entrypoint script executable
+# Change to root user to modify permissions
+USER root
 RUN chmod +x /usr/src/entrypoint.sh
+
+# Change back to mssql user
+USER mssql
 
 # Set the entrypoint script as the entrypoint
 ENTRYPOINT ["/usr/src/entrypoint.sh"]

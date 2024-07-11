@@ -55,7 +55,7 @@
       context: ./EcommerceFrontend
       dockerfile: Dockerfile
     ports:
-      - "4200:80"  
+      - "8000:80"  
     networks:
       - mynetwork
     volumes:
@@ -76,6 +76,18 @@
     depends_on:
       - basketdb
 
+  nginx:
+    container_name: nginx
+	restart: unless-stopped
+	image: nginx
+	ports:
+	  - 80:80
+	  - 443:443
+	volumes:
+	  - ./EcommerceFrontend/nginx/nginx.conf:etc/nginx/nginx.conf
+	  - ./EcommerceFrontend/certbot/conf:/etc/letsencrypt
+	  - ./EcommerceFrontend/certbot/www:/var/www/certbot
+       
 volumes:
   redis-data:
   sqlserver-data:
